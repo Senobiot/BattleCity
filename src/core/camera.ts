@@ -1,17 +1,27 @@
-import { Vector3, FollowCamera, Mesh, Scene } from '@babylonjs/core';
+import { Mesh, Scene, ArcRotateCamera } from '@babylonjs/core';
 
-const createCamera = (scene: Scene, target: Mesh): FollowCamera => {
-  const camera = new FollowCamera('camera', new Vector3(0, 5, -10), scene);
+const createCamera = (
+  scene: Scene,
+  canvas: HTMLCanvasElement,
+  target: Mesh
+): ArcRotateCamera => {
+  const camera = new ArcRotateCamera(
+    'arcCamera',
+    Math.PI / 2,
+    Math.PI / 4,
+    10,
+    target.position,
+    scene
+  );
 
-  camera.lockedTarget = target;
-  camera.radius = 10;
-  camera.heightOffset = 4;
-  camera.rotationOffset = 0;
-  camera.cameraAcceleration = 0.05;
-  camera.maxCameraSpeed = 20;
+  camera.attachControl(canvas, true);
+  camera.wheelPrecision = 50;
+  camera.lowerRadiusLimit = 5;
+  camera.upperRadiusLimit = 30;
 
-  scene.activeCamera = camera;
-  camera.attachControl(true);
+  scene.onBeforeRenderObservable.add(() => {
+    camera.target.copyFrom(target.position);
+  });
 
   return camera;
 };
