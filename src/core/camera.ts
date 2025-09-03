@@ -1,9 +1,9 @@
-import { Mesh, Scene, ArcRotateCamera } from '@babylonjs/core';
+import { Mesh, Scene, ArcRotateCamera, AbstractMesh } from '@babylonjs/core';
 
 const createCamera = (
   scene: Scene,
   canvas: HTMLCanvasElement,
-  target: Mesh
+  target: AbstractMesh
 ): ArcRotateCamera => {
   const camera = new ArcRotateCamera(
     'arcCamera',

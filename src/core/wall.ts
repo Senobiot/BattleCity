@@ -14,7 +14,6 @@ const createWall = (scene: Scene) => {
   wall.position.set(0, 2.5, -25);
 
   const wallMat = new StandardMaterial('wallMat', scene);
-
   const texture = new Texture('./brick.jpg', scene);
   // texture.uScale = 20;
   // texture.vScale = 20;

@@ -4,6 +4,7 @@ import {
   Engine,
   HemisphericLight,
   KeyboardEventTypes,
+  PointerEventTypes,
   Scene,
   Vector3,
 } from '@babylonjs/core';
@@ -12,11 +13,17 @@ import createPlayer from './player';
 import createGround from './ground';
 import createWall from './wall';
 import createBullet from './bullet';
+import { playAnimation, stopAnimations } from './animationManager';
 
-const createScene = (engine: Engine, canvas: HTMLCanvasElement): Scene => {
+const createScene = async (
+  engine: Engine,
+  canvas: HTMLCanvasElement
+): Promise<Scene> => {
   const scene = new Scene(engine);
-  const player = createPlayer(scene);
-  const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
+  const player = await createPlayer(scene);
+  stopAnimations(player);
+
+  new HemisphericLight('light', new Vector3(0, 1, 0), scene);
 
   const camera = createCamera(scene, canvas, player);
   const pointersInput = camera.inputs.attached
@@ -25,7 +32,7 @@ const createScene = (engine: Engine, canvas: HTMLCanvasElement): Scene => {
   pointersInput.buttons = [2];
   pointersInput.panningSensibility = 0;
 
-  createGround(scene);
+  const ground = createGround(scene);
   createWall(scene);
 
   const inputMap: Record<string, boolean> = {};
@@ -49,6 +56,28 @@ const createScene = (engine: Engine, canvas: HTMLCanvasElement): Scene => {
         .add(direction.scale(1.5))
         .add(new Vector3(0, 1, 0));
       createBullet(scene, spawnPos, direction);
+    }
+  });
+
+  let targetPosition: Vector3 | null = null;
+
+  scene.onPointerObservable.add((pointerInfo) => {
+    if (
+      pointerInfo.type === PointerEventTypes.POINTERDOWN &&
+      pointerInfo.event.button === 0
+    ) {
+      const pickResult = scene.pick(
+        scene.pointerX,
+        scene.pointerY,
+        (mesh) => mesh === ground
+      );
+      if (pickResult?.hit && pickResult.pickedMesh) {
+        console.log('Clicked:', pickResult.pickedMesh.name);
+      }
+      if (pickResult?.hit && pickResult.pickedPoint) {
+        targetPosition = pickResult.pickedPoint.clone();
+        targetPosition.y = player.position.y;
+      }
     }
   });
 
@@ -78,6 +107,22 @@ const createScene = (engine: Engine, canvas: HTMLCanvasElement): Scene => {
     if (inputMap['a']) {
       const right = Vector3.Cross(forward, Vector3.Up()).normalize();
       player.moveWithCollisions(right.scale(speed));
+    }
+
+    if (targetPosition) {
+      const direction = targetPosition.subtract(player.position);
+      direction.y = 0;
+
+      const distance = direction.length();
+      if (distance > 0.05) {
+        direction.normalize();
+        player.rotation.y = Math.atan2(direction.x, direction.z);
+        player.moveWithCollisions(direction.scale(speed));
+        playAnimation(player);
+      } else {
+        targetPosition = null;
+        stopAnimations(player);
+      }
     }
   });
 

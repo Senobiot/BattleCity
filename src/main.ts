@@ -1,11 +1,12 @@
 import createEngine from './core/engine';
 import createScene from './core/scene';
+import '@babylonjs/loaders/glTF';
 import './style.css';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 console.log(canvas);
 const engine = createEngine(canvas);
-const scene = createScene(engine, canvas);
+const scene = await createScene(engine, canvas);
 
 engine.runRenderLoop(() => scene.render());
 

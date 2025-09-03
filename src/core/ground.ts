@@ -20,6 +20,8 @@ const createGround = (scene: Scene) => {
 
   groundMat.diffuseTexture = texture;
   ground.receiveShadows = true;
+
+  return ground;
 };
 
 export default createGround;
